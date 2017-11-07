@@ -13,8 +13,7 @@ b = mnist.target.shape
 c = np.unique(mnist.target)
 d = mnist.DESCR
 #replace all values in mnist with binary values
-print(mnist.data[1])
-for i in range(0,mnist.data.size):
+for i in range(0,mnist.data.shape[0]):
     arr = []
     for j in range(0,mnist.data[i].size):
         if mnist.data[i][j] == 0: arr.append(0)
