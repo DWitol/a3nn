@@ -12,10 +12,39 @@ a = mnist.data.shape
 b = mnist.target.shape
 c = np.unique(mnist.target)
 d = mnist.DESCR
+print(a)
+X=mnist.data
+Y=mnist.target
+# print(X[0])
+print(70000/10)
+print(Y[7000])
+print(Y[14000])
+print(Y[21000])
+print(Y[28000])
+print(Y[35000])
+
+subSetX=[]
+subSetY=[]
+
+# set up a subset with only values for 1 to 5 of size 100 ( 20 of each value)
+for i in range(1,6):
+	index=7000*i
+	for j in range(index,index+20):
+		subSetX.append(X[j])
+		subSetY.append(Y[j])
+
+print(np.unique(subSetY))
+print(len(subSetY))
+# print(subSetX[0])
+
+
+
 #replace all values in mnist with binary values
-for i in range(0,mnist.data.shape[0]):
+for i in range(0,len(subSetX)):
     arr = []
-    for j in range(0,mnist.data[i].size):
-        if mnist.data[i][j] == 0: arr.append(0)
+    for j in range(0,len(subSetX[i])):
+        if subSetX[i][j] == 0: arr.append(0)
         else: arr.append(1)
-    mnist.data[i] = arr
+    subSetX[i] = arr
+
+# print(subSetX[0])
