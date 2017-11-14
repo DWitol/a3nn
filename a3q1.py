@@ -48,3 +48,33 @@ for i in range(0,len(subSetX)):
     subSetX[i] = arr
 
 # print(subSetX[0])
+class pair(object):
+    def __init__(self, node, weight):
+        self.node = node
+        self.weight = weight
+
+class Node(object):
+    def __init__(self):
+        self.weights = []
+        self.value = 0
+
+    def activationFunc():
+        for i in self.weights:
+            inputs += self.weights[i].node.value * self.weights[i].weight
+        if(inputs< 0): self.value = -1
+        elif(inputs > 0): self.value = 1
+        
+
+class Network(object):
+    def __init__(self,numNodes):
+        self.nodes = []
+        genNodes(numNodes)
+
+    def genNodes(self,numNodes):
+        while i in range(0,numNodes):
+            self.nodes.append(Node())
+        #;)
+    def stimulateNetwork():
+
+        for i in range(0,self.nodes.size()):
+            self.nodes
