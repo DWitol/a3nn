@@ -4,6 +4,7 @@ from sklearn.datasets import fetch_mldata
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import KFold
 from sklearn import svm
+from pylab import imshow, cm, show
 import math
 import random
 import time
@@ -43,9 +44,10 @@ print(len(subSetY))
 for i in range(0,len(subSetX)):
     arr = []
     for j in range(0,len(subSetX[i])):
-        if subSetX[i][j] == 0: arr.append(0)
+        if subSetX[i][j] == 0: arr.append(-1)
         else: arr.append(1)
     subSetX[i] = arr
+
 
 # print(subSetX[0])
 class pair(object):
@@ -80,20 +82,21 @@ class Network(object):
             self.nodes.append(Node())
 
 
-
-
-        for i in range(0,numNodes):
-            for i in self.nodes:
-                for j in self.nodes:
-                    i.connectNode(j,0)
+        # for i in range(0,numNodes):
+        #     for i in self.nodes:
+        #         for j in self.nodes:
 
 
         #;)
     def stimulateNetwork():
-
         for i in range(0,self.nodes.size()):
             self.nodes
 
+def recall(W, patterns, steps=5):
+    sgn = np.vectorize(lambda x: -1 if x<0 else +1)
+    for _ in range(steps):
+        patterns = sgn(np.dot(patterns,W))
+    return patterns
 
 hopfieldNetowork = Network(50)
 r,c = np.matrix(subSetX).shape
@@ -103,4 +106,6 @@ for i in np.matrix(subSetX):
 
 W[np.diag_indices(c)] = 0
 W = W/r
-print(np.unique(W))
+Bob = recall(W,subSetX)
+
+print(np.unique(Bob))
