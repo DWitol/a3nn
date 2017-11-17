@@ -4,6 +4,7 @@ from sklearn.datasets import fetch_mldata
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import KFold
 from sklearn import svm
+import math
 import random
 import time
 
@@ -38,7 +39,6 @@ print(len(subSetY))
 # print(subSetX[0])
 
 
-
 #replace all values in mnist with binary values
 for i in range(0,len(subSetX)):
     arr = []
@@ -59,22 +59,48 @@ class Node(object):
         self.value = 0
 
     def activationFunc():
+        inputs = 0
         for i in self.weights:
             inputs += self.weights[i].node.value * self.weights[i].weight
         if(inputs< 0): self.value = -1
         elif(inputs > 0): self.value = 1
-        
+
+    def connectNode(self, node,weight):
+        self.weights.append([node,weight])
+
 
 class Network(object):
-    def __init__(self,numNodes):
-        self.nodes = []
-        genNodes(numNodes)
-
     def genNodes(self,numNodes):
         while i in range(0,numNodes):
             self.nodes.append(Node())
+
+    def __init__(self,numNodes):
+        self.nodes = []
+        for i in range(0,numNodes):
+            self.nodes.append(Node())
+
+
+
+
+        for i in range(0,numNodes):
+            for i in self.nodes:
+                for j in self.nodes:
+                    i.connectNode(j,0)
+
+
         #;)
     def stimulateNetwork():
 
         for i in range(0,self.nodes.size()):
             self.nodes
+
+
+hopfieldNetowork = Network(50)
+r,c = np.matrix(subSetX).shape
+W = np.zeros((c,c))
+for i in np.matrix(subSetX):
+    W = W + np.outer(i,i)
+
+W[np.diag_indices(c)] = 0
+W = W/r
+print(np.unique(W))
