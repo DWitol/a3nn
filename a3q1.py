@@ -93,21 +93,22 @@ class Network(object):
         #     for i in self.nodes:
         #         for j in self.nodes:
 
+    def getState(self):
+        arr = []
+        for i in self.nodes:
+            arr.append(i.value)
 
+        return arr
         #;)
     def stimulateNetwork(self):
         changed = 1
-        circulation =0
         while(changed == 1):
-            print(circulation)
-            circulation += 1
             changed = 0
             for i in range(0,len(self.nodes)):
                 oldValue = self.nodes[i].value
                 newValue = self.nodes[i].activationFunc()
                 if(oldValue != newValue):changed = 1
 
-        print("network stimulated")
 
 def recall(W, patterns, steps=5):
     sgn = np.vectorize(lambda x: -1 if x<0 else +1)
@@ -129,5 +130,16 @@ for i in range(0,W[0].size):
     for j in range(0,W[0].size):
         hopfieldNetwork.nodes[i].connectNode(hopfieldNetwork.nodes[j], W[i][j])
 
-hopfieldNetwork.setNodes(subSetX[0])
-hopfieldNetwork.stimulateNetwork()
+createdPatterns = 1
+for i in range(0,len(subSetX)-1):
+    hopfieldNetwork.setNodes(subSetX[i])
+    hopfieldNetwork.stimulateNetwork()
+    state1 = hopfieldNetwork.getState()
+    hopfieldNetwork.setNodes(subSetX[i+1])
+    hopfieldNetwork.stimulateNetwork()
+    state2 = hopfieldNetwork.getState()
+    if(state1 != state2):
+        print("MORE THAN ONE PATTERN")
+        createdPatterns += 1
+
+print(createdPatterns)
