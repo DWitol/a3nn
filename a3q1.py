@@ -60,15 +60,19 @@ class Node(object):
         self.weights = []
         self.value = 0
 
-    def activationFunc():
+    def activationFunc(self):
         inputs = 0
-        for i in self.weights:
-            inputs += self.weights[i].node.value * self.weights[i].weight
+        for i in range(0,len(self.weights)):
+            inputs += self.weights[i][0].value * self.weights[i][1]
         if(inputs< 0): self.value = -1
         elif(inputs > 0): self.value = 1
 
-    def connectNode(self, node,weight):
-        self.weights.append([node,weight])
+        return self.value
+
+    def connectNode(self, OtherNode,weight):
+        self.weights.append([OtherNode,weight])
+
+
 
 
 class Network(object):
@@ -81,6 +85,9 @@ class Network(object):
         for i in range(0,numNodes):
             self.nodes.append(Node())
 
+    def setNodes(self,pattern):
+        for i in range(0,len(pattern)):
+            self.nodes[i].value = pattern[i]
 
         # for i in range(0,numNodes):
         #     for i in self.nodes:
@@ -88,9 +95,19 @@ class Network(object):
 
 
         #;)
-    def stimulateNetwork():
-        for i in range(0,self.nodes.size()):
-            self.nodes
+    def stimulateNetwork(self):
+        changed = 1
+        circulation =0
+        while(changed == 1):
+            print(circulation)
+            circulation += 1
+            changed = 0
+            for i in range(0,len(self.nodes)):
+                oldValue = self.nodes[i].value
+                newValue = self.nodes[i].activationFunc()
+                if(oldValue != newValue):changed = 1
+
+        print("network stimulated")
 
 def recall(W, patterns, steps=5):
     sgn = np.vectorize(lambda x: -1 if x<0 else +1)
@@ -98,7 +115,7 @@ def recall(W, patterns, steps=5):
         patterns = sgn(np.dot(patterns,W))
     return patterns
 
-hopfieldNetowork = Network(50)
+hopfieldNetwork = Network(784)
 r,c = np.matrix(subSetX).shape
 W = np.zeros((c,c))
 for i in np.matrix(subSetX):
@@ -106,6 +123,11 @@ for i in np.matrix(subSetX):
 
 W[np.diag_indices(c)] = 0
 W = W/r
-Bob = recall(W,subSetX)
+bob = recall(W,subSetX)
+print(W[0].size)
+for i in range(0,W[0].size):
+    for j in range(0,W[0].size):
+        hopfieldNetwork.nodes[i].connectNode(hopfieldNetwork.nodes[j], W[i][j])
 
-print(np.unique(Bob))
+hopfieldNetwork.setNodes(subSetX[0])
+hopfieldNetwork.stimulateNetwork()
