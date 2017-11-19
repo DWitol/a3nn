@@ -18,12 +18,12 @@ print(a)
 X=mnist.data
 Y=mnist.target
 # print(X[0])
-print(70000/10)
-print(Y[7000])
-print(Y[14000])
-print(Y[21000])
-print(Y[28000])
-print(Y[35000])
+# print(70000/10)
+# print(Y[7000])
+# print(Y[14000])
+# print(Y[21000])
+# print(Y[28000])
+# print(Y[35000])
 
 subSetX=[]
 subSetY=[]
@@ -33,6 +33,10 @@ X=mnist.data
 Y=mnist.target
 
 # set up a subset with only values for 1 to 5 of size 100 ( 20 of each value)
+
+
+
+
 
 index=7100
 for j in range(index,index+5):
@@ -47,7 +51,16 @@ x_train =subSetX
 y_train = subSetY
 x_test =subSetXTest
 y_test = subSetYTest
+print(np.unique(subSetXTest))
 # print(subSetX[0])
+subSetX = x_test
+for i in range(0,len(subSetX)):
+    arr = []
+    for j in range(0,len(subSetX[0])):
+        if X[i][j] == 0: arr.append(-1)
+        else: arr.append(1)
+    subSetX[i] = arr
+    print(i," of ", len(X))
 
 def to_pattern(letter):
     from numpy import array
@@ -58,14 +71,6 @@ def display(pattern):
     show()
 
 #replace all values in mnist with binary values
-for i in range(0,len(subSetX)):
-    arr = []
-    for j in range(0,len(x_test)):
-        if x_test[i][j] == 0: arr.append(-1)
-        else: arr.append(1)
-    x_test[i] = arr
-
-subSetX = x_test
 
 # print(subSetX[0])
 class Pair(object):
@@ -135,7 +140,7 @@ def recall(W, patterns, steps=5):
         patterns = sgn(np.dot(patterns,W))
     return patterns
 
-subSetXW = [subSetX[0]]
+subSetXW = [subSetX[0],subSetX[1],subSetX[2],subSetX[3],subSetX[4],subSetX[5],subSetX[6],subSetX[7]]
 
 hopfieldNetwork = Network(784)
 r,c = np.matrix(subSetX).shape
