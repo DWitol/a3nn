@@ -51,7 +51,11 @@ x_train =subSetX
 y_train = subSetY
 x_test =subSetXTest
 y_test = subSetYTest
-print(np.unique(subSetXTest))
+print(len(x_train))
+print(len(y_train))
+print(len(x_test))
+print(len(y_test))
+
 # print(subSetX[0])
 subSetX = x_test
 for i in range(0,len(subSetX)):
