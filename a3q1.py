@@ -143,7 +143,8 @@ def recall(W, patterns, steps=5):
     for _ in range(steps):
         patterns = sgn(np.dot(patterns,W))
     return patterns
-
+#for i in x_test:
+#    display(np.matrix(i))
 subSetXW = [subSetX[0],subSetX[1],subSetX[2],subSetX[3],subSetX[4],subSetX[5],subSetX[6],subSetX[7]]
 
 hopfieldNetwork = Network(784)
@@ -161,25 +162,18 @@ for i in range(0,W[0].size):
         hopfieldNetwork.nodes[i].connectNode(hopfieldNetwork.nodes[j], W[i][j])
 createdPatterns = 1
 states = []
-hopfieldNetwork.setNodes(subSetX[0])
+
+hopfieldNetwork.setNodes(X[40000])
 hopfieldNetwork.stimulateNetwork()
 state1 = hopfieldNetwork.getState()
-states.append(state1)
-display(np.matrix(subSetX[0]))
+display(np.matrix(X[35000]))
 display(np.matrix(state1))
-for i in range(0,len(subSetX)-1):
-    hopfieldNetwork.setNodes(subSetX[i])
-    hopfieldNetwork.stimulateNetwork()
-    state1 = hopfieldNetwork.getState()
-    hopfieldNetwork.setNodes(subSetX[i+1])
-    hopfieldNetwork.stimulateNetwork()
-    state2 = hopfieldNetwork.getState()
 
-    if(state1 != state2):
-        if state2 not in states:
-            print("MORE THAN ONE PATTERN")
-            display(np.matrix(subSetX[i+1]))
-            createdPatterns += 1
-            display(np.matrix(state2))
-
-print(createdPatterns)
+# for i in range(0,len(X)-1):
+#     hopfieldNetwork.setNodes(X[i])
+#     hopfieldNetwork.stimulateNetwork()
+#     state1 = hopfieldNetwork.getState()
+#     hopfieldNetwork.setNodes(X[i+1])
+#     hopfieldNetwork.stimulateNetwork()
+#     state2 = hopfieldNetwork.getState()
+#     print("made it through pics")
