@@ -167,7 +167,7 @@ print(y_train[0])
 r,c = np.matrix(x_train).shape
 W = np.zeros((c,c))
 for i in np.matrix(x_train):
-    display(i)
+    #display(i)
     W = W + np.outer(i,i)
 W[np.diag_indices(c)] = 0
 W = W/r
@@ -183,11 +183,13 @@ states = []
 hopfieldNetwork.setNodes(x_train[1])
 hopfieldNetwork.stimulateNetwork()
 state1 = hopfieldNetwork.getState()
-display(np.matrix(X[35000]))
-display(np.matrix(state1))
+#display(np.matrix(X[35000]))
+#display(np.matrix(state1))
 
 for i in range(0,len(x_test)):
+    display(np.matrix(x_test[i]))
     display(recall(W,x_test[i]));
+
 
 # for i in range(0,len(X)-1):
 #     hopfieldNetwork.setNodes(X[i])
