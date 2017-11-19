@@ -4,6 +4,7 @@ from sklearn.datasets import fetch_mldata
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import KFold
 from sklearn import svm
+from pylab import imshow, cm, show
 import math
 import random
 import time
@@ -38,14 +39,22 @@ print(np.unique(subSetY))
 print(len(subSetY))
 # print(subSetX[0])
 
+def to_pattern(letter):
+    from numpy import array
+    return array([+1 if c=='X' else -1 for c in letter.replace('\n','')])
+
+def display(pattern):
+    imshow(pattern.reshape((28,28)),cmap=cm.binary, interpolation='nearest')
+    show()
 
 #replace all values in mnist with binary values
 for i in range(0,len(subSetX)):
     arr = []
     for j in range(0,len(subSetX[i])):
-        if subSetX[i][j] == 0: arr.append(0)
+        if subSetX[i][j] == 0: arr.append(-1)
         else: arr.append(1)
     subSetX[i] = arr
+
 
 # print(subSetX[0])
 class pair(object):
@@ -58,15 +67,19 @@ class Node(object):
         self.weights = []
         self.value = 0
 
-    def activationFunc():
+    def activationFunc(self):
         inputs = 0
-        for i in self.weights:
-            inputs += self.weights[i].node.value * self.weights[i].weight
+        for i in range(0,len(self.weights)):
+            inputs += self.weights[i][0].value * self.weights[i][1]
         if(inputs< 0): self.value = -1
         elif(inputs > 0): self.value = 1
 
-    def connectNode(self, node,weight):
-        self.weights.append([node,weight])
+        return self.value
+
+    def connectNode(self, OtherNode,weight):
+        self.weights.append([OtherNode,weight])
+
+
 
 
 class Network(object):
@@ -79,28 +92,69 @@ class Network(object):
         for i in range(0,numNodes):
             self.nodes.append(Node())
 
+    def setNodes(self,pattern):
+        for i in range(0,len(pattern)):
+            self.nodes[i].value = pattern[i]
 
+        # for i in range(0,numNodes):
+        #     for i in self.nodes:
+        #         for j in self.nodes:
 
+    def getState(self):
+        arr = []
+        for i in self.nodes:
+            arr.append(i.value)
 
-        for i in range(0,numNodes):
-            for i in self.nodes:
-                for j in self.nodes:
-                    i.connectNode(j,0)
-
-
+        return arr
         #;)
-    def stimulateNetwork():
+    def stimulateNetwork(self):
+        changed = 1
+        while(changed == 1):
+            changed = 0
+            for i in range(0,len(self.nodes)):
+                oldValue = self.nodes[i].value
+                newValue = self.nodes[i].activationFunc()
+                if(oldValue != newValue):changed = 1
 
-        for i in range(0,self.nodes.size()):
-            self.nodes
 
+def recall(W, patterns, steps=5):
+    sgn = np.vectorize(lambda x: -1 if x<0 else +1)
+    for _ in range(steps):
+        patterns = sgn(np.dot(patterns,W))
+    return patterns
+subSetXW = [subSetX[0],subSetX[10],subSetX[20],subSetX[30],subSetX[40],subSetX[50],subSetX[60],subSetX[70],subSetX[80]]
 
-hopfieldNetowork = Network(50)
+hopfieldNetwork = Network(784)
 r,c = np.matrix(subSetX).shape
 W = np.zeros((c,c))
-for i in np.matrix(subSetX):
+for i in np.matrix(subSetXW):
     W = W + np.outer(i,i)
 
 W[np.diag_indices(c)] = 0
 W = W/r
-print(np.unique(W))
+bob = recall(W,subSetX)
+print(W[0].size)
+for i in range(0,W[0].size):
+    for j in range(0,W[0].size):
+        hopfieldNetwork.nodes[i].connectNode(hopfieldNetwork.nodes[j], W[i][j])
+createdPatterns = 1
+states = []
+hopfieldNetwork.setNodes(subSetX[0])
+hopfieldNetwork.stimulateNetwork()
+state1 = hopfieldNetwork.getState()
+states.append(state1)
+for i in range(0,len(subSetX)-1):
+    hopfieldNetwork.setNodes(subSetX[i])
+    hopfieldNetwork.stimulateNetwork()
+    state1 = hopfieldNetwork.getState()
+    hopfieldNetwork.setNodes(subSetX[i+1])
+    hopfieldNetwork.stimulateNetwork()
+    state2 = hopfieldNetwork.getState()
+
+    if(state1 != state2):
+        if state2 not in states:
+            print("MORE THAN ONE PATTERN")
+            createdPatterns += 1
+            display(np.matrix(state2))
+
+print(createdPatterns)
