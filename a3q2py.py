@@ -13,40 +13,8 @@ import time
 import matplotlib.pyplot as plt
 import random as ran
 
-print(tf.__version__)
-mnist = fetch_mldata('MNIST original')
-a = mnist.data.shape
-b = mnist.target.shape
-c = np.unique(mnist.target)
-d = mnist.DESCR
-print(a)
-X=mnist.data
-Y=mnist.target
-# print(X[0])
-print(70000/10)
-print(Y[7000])
-print(Y[14000])
-print(Y[21000])
-print(Y[28000])
-print(Y[35000])
-#this som is baised on the som from https://codesachin.wordpress.com/2015/11/28/self-organizing-maps-with-googles-tensorflow/
+#this som is based on the som from https://codesachin.wordpress.com/2015/11/28/self-organizing-maps-with-googles-tensorflow/
 #it has been modified to fit our problem 
-print(__doc__)
-
-from time import time
-import numpy as np
-import matplotlib.pyplot as plt
-
-from sklearn import metrics
-from sklearn.cluster import KMeans
-from sklearn.datasets import load_digits
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import scale
-
-np.random.seed(42)
-
-
-
 class SOM(object):
 
     def __init__(self, m, n, dim, n_iterations=100):
@@ -60,22 +28,22 @@ class SOM(object):
 
         self.graph = tf.Graph()
         with self.graph.as_default():
-
+            #inits
             # To save data, create weight vectors and their location vectors
-            self.weightage_vects = tf.Variable(tf.random_normal( [m * n, dim]) )
-            self.location_vects = tf.constant(np.array(list(self.neuron_locations(m, n))))
+            self.weights = tf.Variable(tf.random_normal( [m * n, dim]) )
+            self.locations = tf.constant(np.array(list(self.createLocations(m, n))))
             # Training inputs
             self.vect_input = tf.placeholder("float", [dim])
             self.iter_input = tf.placeholder("float")
-
+            #calculations
             #Gets the winner index 
             winnerIndex = tf.argmin(tf.sqrt(tf.reduce_sum(
-                tf.pow(tf.subtract(self.weightage_vects, tf.stack(
+                tf.pow(tf.subtract(self.weights, tf.stack(
                     [self.vect_input for _ in range(m * n)])), 2), 1)), 0) 
                     
             #gets the winner from the index
             slice_input = tf.pad(tf.reshape(winnerIndex, [1]), np.array([[0, 1]]))
-            winnerLocation = tf.reshape(tf.slice(self.location_vects, slice_input, 
+            winnerLocation = tf.reshape(tf.slice(self.locations, slice_input, 
                         tf.constant(np.array([1, 2]), dtype=tf.int64) ), [2])
 
             # compute new alpha and sigma for each iteration
@@ -85,59 +53,51 @@ class SOM(object):
 
             # learning rates for all neurons, based on iteration number and location w.r.t. BMU.
             distanceSquare = tf.reduce_sum(tf.pow(tf.subtract(
-                self.location_vects, tf.stack( [winnerLocation for _ in range(m * n)] ) ) , 2 ), 1)
+                self.locations, tf.stack( [winnerLocation for _ in range(m * n)] ) ) , 2 ), 1)
             #gausian function for neghborhood
-            neighbourhood_func = tf.exp(tf.negative(tf.div(tf.cast(
+            neighbourhood = tf.exp(tf.negative(tf.div(tf.cast(
                 distanceSquare, "float32"), tf.pow(sigma_op, 2))))
-            learning_rate_op = tf.multiply(alpha_op, neighbourhood_func)
+            #update learning rate
+            learning_rate_op = tf.multiply(alpha_op, neighbourhood)
 
-            # Finally, the op that will use learning_rate_op to update the weightage vectors of all neurons
+            # Update multiplyer for all the weights vectors of all neurons
             learning_rate_multiplier = tf.stack([tf.tile(tf.slice(
                 learning_rate_op, np.array([i]), np.array([1])), [dim]) for i in range(m * n)] )
 
-            ### Strucutre of updating weight ###
-            ### W(t+1) = W(t) + W_delta ###
-            ### wherer, W_delta = L(t) * ( V(t)-W(t) ) ###
-
-            # W_delta = L(t) * ( V(t)-W(t) )
+            #update the  delta weight using learing rate
             weightage_delta = tf.multiply(
                 learning_rate_multiplier,
-                tf.subtract(tf.stack([self.vect_input for _ in range(m * n)]), self.weightage_vects))
+                tf.subtract(tf.stack([self.vect_input for _ in range(m * n)]), self.weights))
 
             # W(t+1) = W(t) + W_delta
             #updating the weights
-            new_weightages_op = tf.add(self.weightage_vects, weightage_delta)
+            new_weightages_op = tf.add(self.weights, weightage_delta)
 
             # Update weightge_vects by assigning new_weightages_op to it.
-            self.training_op = tf.assign(self.weightage_vects, new_weightages_op)
+            self.training_op = tf.assign(self.weights, new_weightages_op)
 
             self.sess = tf.Session()
             init_op = tf.global_variables_initializer()
             self.sess.run(init_op)
 
-    def neuron_locations(self, m, n):
+    #set up default locations
+    def createLocations(self, m, n):
         for i in range(m):
             for j in range(n):
                 yield np.array([i, j])
 
+    # trains the SOM with the input run through the weight traing for each input during each itteration
     def train(self, input_vects):
         for iter_no in range(self.n_iterations):
             for input_vect in input_vects:
                 self.sess.run(self.training_op, 
                         feed_dict={self.vect_input: input_vect, self.iter_input: iter_no})
 
-        # Store a centroid grid for easy retrieval later on
-        centroid_grid = [[] for i in range(self.m)]
-        self.weightages = list(self.sess.run(self.weightage_vects))
-        self.locations = list(self.sess.run(self.location_vects))
-        for i, loc in enumerate(self.locations):
-            centroid_grid[loc[0]].append(self.weightages[i])
+        #update weights and locations
+        self.weightages = list(self.sess.run(self.weights))
+        self.locations = list(self.sess.run(self.locations))
 
-        self.centroid_grid = centroid_grid
-
-    def get_centroids(self):
-        return self.centroid_grid
-
+    #give locations to inputs in order to graph
     def map_vects(self, input_vects):
         to_return = []
         for vect in input_vects:
@@ -147,9 +107,9 @@ class SOM(object):
 
         return to_return
 
+#end of SOM
 
-## Applying SOM into Mnist data
-
+#load mnist and create a subset of only 5s and 1s
 mnist = fetch_mldata('MNIST original')
 
 subSetX=[]
@@ -160,12 +120,12 @@ X=mnist.data
 Y=mnist.target
 # set up a subset with only values for 1 and 5 of size 60 ( 30 of each value) for training
 
-index=7000
-for j in range(index,index+30):
+index=7000 # start of images of ones
+for j in range(index,index+61):
     subSetX.append(X[j])
     subSetY.append(Y[j])
-index=7000*5
-for j in range(index,index+30):
+index=35000 #start of images of 5s 
+for j in range(index,index+61):
     subSetX.append(X[j])
     subSetY.append(Y[j])
 # set up a subset with only values for 1 and 5 of size 10 ( 5 of each value) for testing
@@ -184,47 +144,25 @@ y_train = subSetY
 x_test =subSetXTest
 y_test = subSetYTest
 
+#set up and train the network **************
 som = SOM(30, 30, 784, 100)
 som.train(x_train)
 
-# Fit train data into SOM lattice
+#set up training data to be shown in a Plot
 mapped = som.map_vects(x_train)
 mappedarr = np.array(mapped)
-x1 = mappedarr[:,0]; y1 = mappedarr[:,1]
+x1 = mappedarr[:,0] 
+y1 = mappedarr[:,1]
 
-
-## Plots: 1) Train 2) Test+Train ###
-
-plt.figure(1, figsize=(12,6))
-plt.subplot(121)
-# Plot 1 for Training only
-plt.scatter(x1,y1)
-# Just adding text
-for i, m in enumerate(mapped):
-    plt.text( m[0], m[1],y_train[i], ha='center', va='center', bbox=dict(facecolor='white', alpha=0.5, lw=0))
-plt.title('Train MNIST 60')
-
-# Testing
+#test the network ***********************
 mappedtest = som.map_vects(x_test)
 mappedtestarr = np.array(mappedtest)
 x2 = mappedtestarr[:,0]
 y2 = mappedtestarr[:,1]
 
-plt.subplot(122)
-# Plot 2: Training + Testing
-plt.scatter(x1,y1)
-# Just adding text
-for i, m in enumerate(mapped):
-    plt.text( m[0], m[1],y_train[i], ha='center', va='center', bbox=dict(facecolor='white', alpha=0.5, lw=0))
 
-plt.scatter(x2,y2)
-# Just adding text
-for i, m in enumerate(mappedtest):
-    plt.text( m[0], m[1],y_test[i], ha='center', va='center', bbox=dict(facecolor='red', alpha=0.5, lw=0))
-plt.title('Test MNIST 10 + Train MNIST 60')
 
-# plt.show()
-
+# calculate k-means ******************************
 clusters=6
 print("with clusters n=")
 print(clusters)
@@ -232,63 +170,38 @@ kmeans = KMeans(n_clusters=clusters, random_state=0).fit(subSetX)
 
 centers = kmeans.cluster_centers_
 
-tryingThis=som.map_vects(centers)
-tryThisMapArr=np.array(tryingThis)
-x3 = tryThisMapArr[:,0]
-y3 = tryThisMapArr[:,1]
+# diplay the results in two Plots 
+plt.figure(1, figsize=(12,6))
+plt.subplot(121)
+
+# Plot 1 training displayed on it's own to show areas
+plt.scatter(x1,y1)
+for i, m in enumerate(mapped):
+    plt.text( m[0], m[1],y_train[i], ha='center', va='center', bbox=dict(facecolor='white', alpha=0.5, lw=0))
+plt.title('Train MNIST 60')
+
+#new plot 
+plt.subplot(122)
+# Plot 2: Training and tests overlap with clusters
+#training
+plt.scatter(x1,y1)
+for i, m in enumerate(mapped):
+    plt.text( m[0], m[1],y_train[i], ha='center', va='center', bbox=dict(facecolor='white', alpha=0.5, lw=0))
+#tests
+plt.scatter(x2,y2)
+for i, m in enumerate(mappedtest):
+    plt.text( m[0], m[1],y_test[i], ha='center', va='center', bbox=dict(facecolor='red', alpha=0.5, lw=0))
+plt.title('Test MNIST 10 + Train MNIST 60')
+
+#clusters
+# map the cluster locations to the SOM
+clusterMap=som.map_vects(centers)
+clusterMapArr=np.array(clusterMap)
+x3 = clusterMapArr[:,0]
+y3 = clusterMapArr[:,1]
 plt.scatter(x3,y3)
-for i, m in enumerate(tryingThis):
+for i, m in enumerate(clusterMap):
      plt.text( m[0], m[1],"x", ha='center', va='center', bbox=dict(facecolor='blue', alpha=0.5, lw=0))
-
-# # Plot the centroids as a white X
-# centroids = centers
-# plt.scatter(centroids[:, 0], centroids[:, 1],
-#             marker='x', s=169, linewidths=3,
-#             color='b', zorder=10)
-# plt.title('K-means clustering on the digits dataset (PCA-reduced data)\n'
-#           'Centroids are marked with black cross')
-# plt.xlim(-40, 30)
-# plt.ylim(-40, 30)
-# plt.xticks(())
-# plt.yticks(())
-#plt.show()
-
-#
-# U,s,V=np.linalg.svd(centers)
-# print(U.shape, V.shape, s.shape)
-# plt.subplot(122)
-# # Plot 2: Training + Testing
-# plt.scatter(x1,y1)
-# # Just adding text
-# for i, m in enumerate(mapped):
-#     plt.text( m[0], m[1],y_train[i], ha='center', va='center', bbox=dict(facecolor='white', alpha=0.5, lw=0))
-
-# plt.scatter(x2,y2)
-# # Just adding text
-# for i, m in enumerate(mappedtest):
-#     plt.text( m[0], m[1],y_test[i], ha='center', va='center', bbox=dict(facecolor='red', alpha=0.5, lw=0))
-# plt.title('Test MNIST 10 + Train MNIST 60')
-
-# plt.scatter(5, 0,
-#             marker='x', s=169, linewidths=3,
-#             color='b', zorder=10)
-# plt.title('s K-means clustering on the digits dataset (PCA-reduced data)\n'
-#           'Centroids are marked with black cross')
-# # plt.xlim(-10, 10)
-# # plt.ylim(-10, 10)
-# plt.xticks(())
-# plt.yticks(())
-# centroids = centers
-
-# plt.scatter(centroids[:, 0], centroids[:, 1],
-#             marker='x', s=169, linewidths=3,
-#             color='b', zorder=10)
-# plt.title('K-means clustering on the digits dataset (PCA-reduced data)\n'
-#           'Centroids are marked with black cross')
-# # plt.xlim(-40, 30)
-# # plt.ylim(-40, 30)
-# plt.xticks(())
-# plt.yticks(())
 plt.show()
 
 
