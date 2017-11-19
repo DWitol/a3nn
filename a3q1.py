@@ -35,11 +35,11 @@ Y=mnist.target
 # set up a subset with only values for 1 and 5 of size 60 ( 30 of each value) for training
 
 index=7000 # start of images of ones
-for j in range(index,index+61):
+for j in range(index,index+2):
     subSetX.append(X[j])
     subSetY.append(Y[j])
 index=35000 #start of images of 5s 
-for j in range(index,index+61):
+for j in range(index,index+2):
     subSetX.append(X[j])
     subSetY.append(Y[j])
 # set up a subset with only values for 1 and 5 of size 10 ( 5 of each value) for testing
@@ -163,9 +163,11 @@ def recall(W, patterns, steps=20):
 
 hopfieldNetwork = Network(784)
 #training
+print(y_train[0])
 r,c = np.matrix(x_train).shape
 W = np.zeros((c,c))
 for i in np.matrix(x_train):
+    print(i)
     W = W + np.outer(i,i)
 W[np.diag_indices(c)] = 0
 W = W/r
@@ -186,6 +188,7 @@ display(np.matrix(state1))
 
 for i in range(0,len(x_test)):
     display(recall(W,x_test[i]));
+
 # for i in range(0,len(X)-1):
 #     hopfieldNetwork.setNodes(X[i])
 #     hopfieldNetwork.stimulateNetwork()
