@@ -31,6 +31,20 @@ print(Y[28000])
 print(Y[35000])
 #this som is baised on the som from https://codesachin.wordpress.com/2015/11/28/self-organizing-maps-with-googles-tensorflow/
 #it has been modified to fit our problem 
+print(__doc__)
+
+from time import time
+import numpy as np
+import matplotlib.pyplot as plt
+
+from sklearn import metrics
+from sklearn.cluster import KMeans
+from sklearn.datasets import load_digits
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import scale
+
+np.random.seed(42)
+
 
 
 class SOM(object):
@@ -91,6 +105,7 @@ class SOM(object):
                 tf.subtract(tf.stack([self.vect_input for _ in range(m * n)]), self.weightage_vects))
 
             # W(t+1) = W(t) + W_delta
+            #updating the weights
             new_weightages_op = tf.add(self.weightage_vects, weightage_delta)
 
             # Update weightge_vects by assigning new_weightages_op to it.
@@ -187,7 +202,7 @@ plt.scatter(x1,y1)
 # Just adding text
 for i, m in enumerate(mapped):
     plt.text( m[0], m[1],y_train[i], ha='center', va='center', bbox=dict(facecolor='white', alpha=0.5, lw=0))
-plt.title('Train MNIST 100')
+plt.title('Train MNIST 60')
 
 # Testing
 mappedtest = som.map_vects(x_test)
@@ -206,60 +221,75 @@ plt.scatter(x2,y2)
 # Just adding text
 for i, m in enumerate(mappedtest):
     plt.text( m[0], m[1],y_test[i], ha='center', va='center', bbox=dict(facecolor='red', alpha=0.5, lw=0))
-plt.title('Test MNIST 10 + Train MNIST 100')
+plt.title('Test MNIST 10 + Train MNIST 60')
 
-plt.show()
+# plt.show()
 
-clusters=5
+clusters=6
 print("with clusters n=")
 print(clusters)
 kmeans = KMeans(n_clusters=clusters, random_state=0).fit(subSetX)
 
 centers = kmeans.cluster_centers_
 
-print(centers)
-print(len(centers))
+tryingThis=som.map_vects(centers)
+tryThisMapArr=np.array(tryingThis)
+x3 = tryThisMapArr[:,0]
+y3 = tryThisMapArr[:,1]
+plt.scatter(x3,y3)
+for i, m in enumerate(tryingThis):
+     plt.text( m[0], m[1],"x", ha='center', va='center', bbox=dict(facecolor='blue', alpha=0.5, lw=0))
 
-# reduced_data = subSetX
-# kmeans = KMeans(init='k-means++', n_clusters=5, n_init=10)
-# kmeans.fit(reduced_data)
-
-# # Step size of the mesh. Decrease to increase the quality of the VQ.
-# h = .02     # point in the mesh [x_min, x_max]x[y_min, y_max].
-
-# # Plot the decision boundary. For that, we will assign a color to each
-# x_min, x_max = reduced_data[:, 0].min() - 1, reduced_data[:, 0].max() + 1
-# y_min, y_max = reduced_data[:, 1].min() - 1, reduced_data[:, 1].max() + 1
-# xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
-
-# # Obtain labels for each point in mesh. Use last trained model.
-# Z = kmeans.predict(np.c_[xx.ravel(), yy.ravel()])
-
-# # Put the result into a color plot
-# Z = Z.reshape(xx.shape)
-# plt.figure(1)
-# plt.clf()
-# plt.imshow(Z, interpolation='nearest',
-#            extent=(xx.min(), xx.max(), yy.min(), yy.max()),
-#            cmap=plt.cm.Paired,
-#            aspect='auto', origin='lower')
-
-# plt.plot(reduced_data[:, 0], reduced_data[:, 1], 'k.', markersize=2)
 # # Plot the centroids as a white X
-# centroids = kmeans.cluster_centers_
+# centroids = centers
 # plt.scatter(centroids[:, 0], centroids[:, 1],
 #             marker='x', s=169, linewidths=3,
-#             color='w', zorder=10)
+#             color='b', zorder=10)
 # plt.title('K-means clustering on the digits dataset (PCA-reduced data)\n'
-#           'Centroids are marked with white cross')
-# plt.xlim(x_min, x_max)
-# plt.ylim(y_min, y_max)
+#           'Centroids are marked with black cross')
+# plt.xlim(-40, 30)
+# plt.ylim(-40, 30)
 # plt.xticks(())
 # plt.yticks(())
-# plt.show()
+#plt.show()
 
+#
+# U,s,V=np.linalg.svd(centers)
+# print(U.shape, V.shape, s.shape)
+# plt.subplot(122)
+# # Plot 2: Training + Testing
+# plt.scatter(x1,y1)
+# # Just adding text
+# for i, m in enumerate(mapped):
+#     plt.text( m[0], m[1],y_train[i], ha='center', va='center', bbox=dict(facecolor='white', alpha=0.5, lw=0))
 
+# plt.scatter(x2,y2)
+# # Just adding text
+# for i, m in enumerate(mappedtest):
+#     plt.text( m[0], m[1],y_test[i], ha='center', va='center', bbox=dict(facecolor='red', alpha=0.5, lw=0))
+# plt.title('Test MNIST 10 + Train MNIST 60')
 
+# plt.scatter(5, 0,
+#             marker='x', s=169, linewidths=3,
+#             color='b', zorder=10)
+# plt.title('s K-means clustering on the digits dataset (PCA-reduced data)\n'
+#           'Centroids are marked with black cross')
+# # plt.xlim(-10, 10)
+# # plt.ylim(-10, 10)
+# plt.xticks(())
+# plt.yticks(())
+# centroids = centers
+
+# plt.scatter(centroids[:, 0], centroids[:, 1],
+#             marker='x', s=169, linewidths=3,
+#             color='b', zorder=10)
+# plt.title('K-means clustering on the digits dataset (PCA-reduced data)\n'
+#           'Centroids are marked with black cross')
+# # plt.xlim(-40, 30)
+# # plt.ylim(-40, 30)
+# plt.xticks(())
+# plt.yticks(())
+plt.show()
 
 
 
