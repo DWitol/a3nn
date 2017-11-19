@@ -32,18 +32,24 @@ subSetYTest=[]
 X=mnist.data
 Y=mnist.target
 
-# set up a subset with only values for 1 to 5 of size 100 ( 20 of each value)
+# set up a subset with only values for 1 and 5 of size 60 ( 30 of each value) for training
 
-
-
-
+index=7000 # start of images of ones
+for j in range(index,index+61):
+    subSetX.append(X[j])
+    subSetY.append(Y[j])
+index=35000 #start of images of 5s 
+for j in range(index,index+61):
+    subSetX.append(X[j])
+    subSetY.append(Y[j])
+# set up a subset with only values for 1 and 5 of size 10 ( 5 of each value) for testing
 
 index=7100
-for j in range(index,index+5):
+for j in range(index,index+3):
     subSetXTest.append(X[j])
     subSetYTest.append(Y[j])
 index=(7000*5)+100
-for j in range(index,index+5):
+for j in range(index,index+3):
     subSetXTest.append(X[j])
     subSetYTest.append(Y[j])
 
@@ -57,18 +63,26 @@ print(len(x_test))
 print(len(y_test))
 
 # print(subSetX[0])
-subSetX = x_test
-for i in range(0,len(subSetX)):
+#subSetX = x_test
+for i in range(0,len(x_train)):
     arr = []
-    for j in range(0,len(subSetX[0])):
+    for j in range(0,len(x_train[0])):
         if X[i][j] == 0: arr.append(-1)
         else: arr.append(1)
-    subSetX[i] = arr
-    print(i," of ", len(X))
+    x_train[i] = arr
+    print(i," of ", len(x_train))
 
-def to_pattern(letter):
-    from numpy import array
-    return array([+1 if c=='X' else -1 for c in letter.replace('\n','')])
+for i in range(0,len(x_test)):
+    arr = []
+    for j in range(0,len(x_test[0])):
+        if X[i][j] == 0: arr.append(-1)
+        else: arr.append(1)
+    x_test[i] = arr
+    print(i," of ", len(x_test))
+
+# def to_pattern(letter):
+#     from numpy import array
+#     return array([+1 if c=='X' else -1 for c in letter.replace('\n','')])
 
 def display(pattern):
     imshow(pattern.reshape((28,28)),cmap=cm.binary, interpolation='nearest')
@@ -138,24 +152,25 @@ class Network(object):
                 if(oldValue != newValue):changed = 1
 
 
-def recall(W, patterns, steps=5):
+def recall(W, patterns, steps=20):
     sgn = np.vectorize(lambda x: -1 if x<0 else +1)
     for _ in range(steps):
         patterns = sgn(np.dot(patterns,W))
     return patterns
+
 #for i in x_test:
 #    display(np.matrix(i))
-subSetXW = [subSetX[0],subSetX[1],subSetX[2],subSetX[3],subSetX[4],subSetX[5],subSetX[6],subSetX[7]]
 
 hopfieldNetwork = Network(784)
-r,c = np.matrix(subSetX).shape
+#training
+r,c = np.matrix(x_train).shape
 W = np.zeros((c,c))
-for i in np.matrix(subSetXW):
+for i in np.matrix(x_train):
     W = W + np.outer(i,i)
-
 W[np.diag_indices(c)] = 0
 W = W/r
-bob = recall(W,subSetX)
+
+bob = recall(W,x_train)
 print(W[0].size)
 for i in range(0,W[0].size):
     for j in range(0,W[0].size):
@@ -163,12 +178,14 @@ for i in range(0,W[0].size):
 createdPatterns = 1
 states = []
 
-hopfieldNetwork.setNodes(X[40000])
+hopfieldNetwork.setNodes(x_train[1])
 hopfieldNetwork.stimulateNetwork()
 state1 = hopfieldNetwork.getState()
 display(np.matrix(X[35000]))
 display(np.matrix(state1))
 
+for i in range(0,len(x_test)):
+    display(recall(W,x_test[i]));
 # for i in range(0,len(X)-1):
 #     hopfieldNetwork.setNodes(X[i])
 #     hopfieldNetwork.stimulateNetwork()
