@@ -27,16 +27,26 @@ print(Y[35000])
 
 subSetX=[]
 subSetY=[]
+subSetXTest=[]
+subSetYTest=[]
+X=mnist.data
+Y=mnist.target
 
 # set up a subset with only values for 1 to 5 of size 100 ( 20 of each value)
-for i in range(1,6):
-	index=7000*i
-	for j in range(index,index+20):
-		subSetX.append(X[j])
-		subSetY.append(Y[j])
 
-print(np.unique(subSetY))
-print(len(subSetY))
+index=7100
+for j in range(index,index+5):
+    subSetXTest.append(X[j])
+    subSetYTest.append(Y[j])
+index=(7000*5)+100
+for j in range(index,index+5):
+    subSetXTest.append(X[j])
+    subSetYTest.append(Y[j])
+
+x_train =subSetX
+y_train = subSetY
+x_test =subSetXTest
+y_test = subSetYTest
 # print(subSetX[0])
 
 def to_pattern(letter):
@@ -50,14 +60,15 @@ def display(pattern):
 #replace all values in mnist with binary values
 for i in range(0,len(subSetX)):
     arr = []
-    for j in range(0,len(subSetX[i])):
-        if subSetX[i][j] == 0: arr.append(-1)
+    for j in range(0,len(x_test)):
+        if x_test[i][j] == 0: arr.append(-1)
         else: arr.append(1)
-    subSetX[i] = arr
+    x_test[i] = arr
 
+subSetX = x_test
 
 # print(subSetX[0])
-class pair(object):
+class Pair(object):
     def __init__(self, node, weight):
         self.node = node
         self.weight = weight
@@ -77,6 +88,7 @@ class Node(object):
         return self.value
 
     def connectNode(self, OtherNode,weight):
+        pair = Pair(OtherNode,weight)
         self.weights.append([OtherNode,weight])
 
 
@@ -122,7 +134,8 @@ def recall(W, patterns, steps=5):
     for _ in range(steps):
         patterns = sgn(np.dot(patterns,W))
     return patterns
-subSetXW = [subSetX[0],subSetX[10],subSetX[20],subSetX[30],subSetX[40],subSetX[50],subSetX[60],subSetX[70],subSetX[80]]
+
+subSetXW = [subSetX[0]]
 
 hopfieldNetwork = Network(784)
 r,c = np.matrix(subSetX).shape
@@ -143,6 +156,8 @@ hopfieldNetwork.setNodes(subSetX[0])
 hopfieldNetwork.stimulateNetwork()
 state1 = hopfieldNetwork.getState()
 states.append(state1)
+display(np.matrix(subSetX[0]))
+display(np.matrix(state1))
 for i in range(0,len(subSetX)-1):
     hopfieldNetwork.setNodes(subSetX[i])
     hopfieldNetwork.stimulateNetwork()
@@ -154,6 +169,7 @@ for i in range(0,len(subSetX)-1):
     if(state1 != state2):
         if state2 not in states:
             print("MORE THAN ONE PATTERN")
+            display(np.matrix(subSetX[i+1]))
             createdPatterns += 1
             display(np.matrix(state2))
 
