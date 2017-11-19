@@ -115,11 +115,12 @@ def recall(W, patterns, steps=5):
     for _ in range(steps):
         patterns = sgn(np.dot(patterns,W))
     return patterns
+subSetXW = [subSetX[0],subSetX[10],subSetX[20],subSetX[30],subSetX[40],subSetX[50],subSetX[60],subSetX[70],subSetX[80]]
 
 hopfieldNetwork = Network(784)
 r,c = np.matrix(subSetX).shape
 W = np.zeros((c,c))
-for i in np.matrix(subSetX):
+for i in np.matrix(subSetXW):
     W = W + np.outer(i,i)
 
 W[np.diag_indices(c)] = 0
@@ -129,7 +130,6 @@ print(W[0].size)
 for i in range(0,W[0].size):
     for j in range(0,W[0].size):
         hopfieldNetwork.nodes[i].connectNode(hopfieldNetwork.nodes[j], W[i][j])
-
 createdPatterns = 1
 for i in range(0,len(subSetX)-1):
     hopfieldNetwork.setNodes(subSetX[i])
