@@ -39,6 +39,13 @@ print(np.unique(subSetY))
 print(len(subSetY))
 # print(subSetX[0])
 
+def to_pattern(letter):
+    from numpy import array
+    return array([+1 if c=='X' else -1 for c in letter.replace('\n','')])
+
+def display(pattern):
+    imshow(pattern.reshape((28,28)),cmap=cm.binary, interpolation='nearest')
+    show()
 
 #replace all values in mnist with binary values
 for i in range(0,len(subSetX)):
@@ -131,6 +138,11 @@ for i in range(0,W[0].size):
     for j in range(0,W[0].size):
         hopfieldNetwork.nodes[i].connectNode(hopfieldNetwork.nodes[j], W[i][j])
 createdPatterns = 1
+states = []
+hopfieldNetwork.setNodes(subSetX[0])
+hopfieldNetwork.stimulateNetwork()
+state1 = hopfieldNetwork.getState()
+states.append(state1)
 for i in range(0,len(subSetX)-1):
     hopfieldNetwork.setNodes(subSetX[i])
     hopfieldNetwork.stimulateNetwork()
@@ -138,8 +150,11 @@ for i in range(0,len(subSetX)-1):
     hopfieldNetwork.setNodes(subSetX[i+1])
     hopfieldNetwork.stimulateNetwork()
     state2 = hopfieldNetwork.getState()
+
     if(state1 != state2):
-        print("MORE THAN ONE PATTERN")
-        createdPatterns += 1
+        if state2 not in states:
+            print("MORE THAN ONE PATTERN")
+            createdPatterns += 1
+            display(np.matrix(state2))
 
 print(createdPatterns)
