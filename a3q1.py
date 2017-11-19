@@ -38,7 +38,7 @@ index=7000 # start of images of ones
 for j in range(index,index+2):
     subSetX.append(X[j])
     subSetY.append(Y[j])
-index=35000 #start of images of 5s 
+index=35000 #start of images of 5s
 for j in range(index,index+2):
     subSetX.append(X[j])
     subSetY.append(Y[j])
@@ -67,7 +67,7 @@ print(len(y_test))
 for i in range(0,len(x_train)):
     arr = []
     for j in range(0,len(x_train[0])):
-        if X[i][j] == 0: arr.append(-1)
+        if x_train[i][j] == 0: arr.append(-1)
         else: arr.append(1)
     x_train[i] = arr
     print(i," of ", len(x_train))
@@ -75,7 +75,7 @@ for i in range(0,len(x_train)):
 for i in range(0,len(x_test)):
     arr = []
     for j in range(0,len(x_test[0])):
-        if X[i][j] == 0: arr.append(-1)
+        if x_test[i][j] == 0: arr.append(-1)
         else: arr.append(1)
     x_test[i] = arr
     print(i," of ", len(x_test))
@@ -167,12 +167,12 @@ print(y_train[0])
 r,c = np.matrix(x_train).shape
 W = np.zeros((c,c))
 for i in np.matrix(x_train):
-    print(i)
+    display(i)
     W = W + np.outer(i,i)
 W[np.diag_indices(c)] = 0
 W = W/r
 
-bob = recall(W,x_train)
+#bob = recall(W,x_train)
 print(W[0].size)
 for i in range(0,W[0].size):
     for j in range(0,W[0].size):
