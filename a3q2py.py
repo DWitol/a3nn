@@ -10,6 +10,8 @@ from sklearn import svm
 import math
 import random
 import time
+import matplotlib.pyplot as plt
+import random as ran
 
 print(tf.__version__)
 mnist = fetch_mldata('MNIST original')
@@ -27,114 +29,52 @@ print(Y[14000])
 print(Y[21000])
 print(Y[28000])
 print(Y[35000])
+#this som is baised on the som from https://codesachin.wordpress.com/2015/11/28/self-organizing-maps-with-googles-tensorflow/
+#it has been modified to fit our problem 
 
-subSetX=[]
-subSetY=[]
-
-# set up a subset with only values for 1 to 5 of size 100 ( 20 of each value)
-for i in range(1,6):
-	index=7000*i
-	for j in range(index,index+10):
-		subSetX.append(X[j])
-		subSetY.append(Y[j])
-
-print(np.unique(subSetY))
-print(len(subSetY))
-# print(subSetX[0])
-
-
-#replace all values in mnist with binary values
-for i in range(0,len(subSetX)):
-    arr = []
-    for j in range(0,len(subSetX[i])):
-        if subSetX[i][j] == 0: arr.append(0)
-        else: arr.append(1)
-    subSetX[i] = arr
-
-
-clusters=5
-print("with clusters n=")
-print(clusters)
-kmeans = KMeans(n_clusters=clusters, random_state=0).fit(subSetX)
-
-centers = kmeans.cluster_centers_
-
-print(centers)
-print(len(centers))
-# I don't think we need this part for the question but im not sure 
-# neigh=NearestNeighbors(n_neighbors=20)
-# neigh.fit(subSetX)
-
-# dists,indexs = neigh.kneighbors(X=centers)
-# def getR(dists,k):
-#     sumSquared=0
-#     for i in dist:
-#         sumSquared+=i*i
-#     return math.sqrt(sumSquared/k)
-
-# r=[]
-# for dist in dists:
-#     r.append(getR(dist,20))
-
-# print(r)
 
 class SOM(object):
 
-    # To check if the SOM has been trained
-    trained = False
-
-    def __init__(self, m, n, dim, n_iterations=100, alpha=None, sigma=None):
+    def __init__(self, m, n, dim, n_iterations=100):
 
         # Assign required variables first
-        self.m = m; self.n = n
-        if alpha is None:
-            alpha = 0.2
-        else:
-            alpha = float(alpha)
-        if sigma is None:
-            sigma = max(m, n) / 2.0
-        else:
-            sigma = float(sigma)
+        self.m = m; 
+        self.n = n
+        alpha = 0.2
+        sigma = max(m, n) / 2.0
         self.n_iterations = abs(int(n_iterations))
 
         self.graph = tf.Graph()
         with self.graph.as_default():
 
             # To save data, create weight vectors and their location vectors
-
             self.weightage_vects = tf.Variable(tf.random_normal( [m * n, dim]) )
-
             self.location_vects = tf.constant(np.array(list(self.neuron_locations(m, n))))
-
             # Training inputs
-
-            # The training vector
             self.vect_input = tf.placeholder("float", [dim])
-            # Iteration number
             self.iter_input = tf.placeholder("float")
 
-            # Training Operation  # tf.stack result will be [ (m*n),  dim ]
-
-            bmu_index = tf.argmin(tf.sqrt(tf.reduce_sum(
+            #Gets the winner index 
+            winnerIndex = tf.argmin(tf.sqrt(tf.reduce_sum(
                 tf.pow(tf.subtract(self.weightage_vects, tf.stack(
                     [self.vect_input for _ in range(m * n)])), 2), 1)), 0) 
                     
-
-            slice_input = tf.pad(tf.reshape(bmu_index, [1]), np.array([[0, 1]]))
-            bmu_loc = tf.reshape(tf.slice(self.location_vects, slice_input, 
+            #gets the winner from the index
+            slice_input = tf.pad(tf.reshape(winnerIndex, [1]), np.array([[0, 1]]))
+            winnerLocation = tf.reshape(tf.slice(self.location_vects, slice_input, 
                         tf.constant(np.array([1, 2]), dtype=tf.int64) ), [2])
 
-            # To compute the alpha and sigma values based on iteration number
+            # compute new alpha and sigma for each iteration
             learning_rate_op = tf.subtract(1.0, tf.div(self.iter_input, self.n_iterations))
             alpha_op = tf.multiply(alpha, learning_rate_op)
             sigma_op = tf.multiply(sigma, learning_rate_op)
 
             # learning rates for all neurons, based on iteration number and location w.r.t. BMU.
-            bmu_distance_squares = tf.reduce_sum(tf.pow(tf.subtract(
-                self.location_vects, tf.stack( [bmu_loc for _ in range(m * n)] ) ) , 2 ), 1)
-
+            distanceSquare = tf.reduce_sum(tf.pow(tf.subtract(
+                self.location_vects, tf.stack( [winnerLocation for _ in range(m * n)] ) ) , 2 ), 1)
+            #gausian function for neghborhood
             neighbourhood_func = tf.exp(tf.negative(tf.div(tf.cast(
-                bmu_distance_squares, "float32"), tf.pow(sigma_op, 2))))
+                distanceSquare, "float32"), tf.pow(sigma_op, 2))))
             learning_rate_op = tf.multiply(alpha_op, neighbourhood_func)
 
             # Finally, the op that will use learning_rate_op to update the weightage vectors of all neurons
@@ -161,16 +101,12 @@ class SOM(object):
             self.sess.run(init_op)
 
     def neuron_locations(self, m, n):
-
         for i in range(m):
             for j in range(n):
                 yield np.array([i, j])
 
     def train(self, input_vects):
-
-        # Training iterations
         for iter_no in range(self.n_iterations):
-            # Train with each vector one by one
             for input_vect in input_vects:
                 self.sess.run(self.training_op, 
                         feed_dict={self.vect_input: input_vect, self.iter_input: iter_no})
@@ -184,19 +120,10 @@ class SOM(object):
 
         self.centroid_grid = centroid_grid
 
-        self.trained = True
-
     def get_centroids(self):
-
-        if not self.trained:
-            raise ValueError("SOM not trained yet")
         return self.centroid_grid
 
     def map_vects(self, input_vects):
-
-        if not self.trained:
-            raise ValueError("SOM not trained yet")
-
         to_return = []
         for vect in input_vects:
             min_index = min( [i for i in range(len(self.weightages))], 
@@ -205,18 +132,10 @@ class SOM(object):
 
         return to_return
 
-import matplotlib.pyplot as plt
-import numpy as np
-import random as ran
 
 ## Applying SOM into Mnist data
 
 mnist = fetch_mldata('MNIST original')
-
-def train_size(num):
-    x_train = mnist.data[:num]
-    y_train = mnist.target[:num]
-    return x_train, y_train
 
 subSetX=[]
 subSetY=[]
@@ -224,25 +143,33 @@ subSetXTest=[]
 subSetYTest=[]
 X=mnist.data
 Y=mnist.target
-# set up a subset with only values for 1 to 5 of size 100 ( 10 of each value) for training
-for i in range(1,6):
-    index=7000*i
-    for j in range(index,index+10):
-        subSetX.append(X[j])
-        subSetY.append(Y[j])
-# set up a subset with only values for 1 to 5 of size 100 ( 10 of each value) for testing
-for i in range(1,6):
-    index=7100*i
-    for j in range(index,index+10):
-        subSetXTest.append(X[j])
-        subSetYTest.append(Y[j])
+# set up a subset with only values for 1 and 5 of size 60 ( 30 of each value) for training
+
+index=7000
+for j in range(index,index+30):
+    subSetX.append(X[j])
+    subSetY.append(Y[j])
+index=7000*5
+for j in range(index,index+30):
+    subSetX.append(X[j])
+    subSetY.append(Y[j])
+# set up a subset with only values for 1 and 5 of size 10 ( 5 of each value) for testing
+
+index=7100
+for j in range(index,index+5):
+    subSetXTest.append(X[j])
+    subSetYTest.append(Y[j])
+index=(7000*5)+100
+for j in range(index,index+5):
+    subSetXTest.append(X[j])
+    subSetYTest.append(Y[j])
 
 x_train =subSetX
 y_train = subSetY
 x_test =subSetXTest
 y_test = subSetYTest
 
-som = SOM(30, 30, 784, 20)
+som = SOM(30, 30, 784, 100)
 som.train(x_train)
 
 # Fit train data into SOM lattice
@@ -283,7 +210,53 @@ plt.title('Test MNIST 10 + Train MNIST 100')
 
 plt.show()
 
+clusters=5
+print("with clusters n=")
+print(clusters)
+kmeans = KMeans(n_clusters=clusters, random_state=0).fit(subSetX)
 
+centers = kmeans.cluster_centers_
+
+print(centers)
+print(len(centers))
+
+# reduced_data = subSetX
+# kmeans = KMeans(init='k-means++', n_clusters=5, n_init=10)
+# kmeans.fit(reduced_data)
+
+# # Step size of the mesh. Decrease to increase the quality of the VQ.
+# h = .02     # point in the mesh [x_min, x_max]x[y_min, y_max].
+
+# # Plot the decision boundary. For that, we will assign a color to each
+# x_min, x_max = reduced_data[:, 0].min() - 1, reduced_data[:, 0].max() + 1
+# y_min, y_max = reduced_data[:, 1].min() - 1, reduced_data[:, 1].max() + 1
+# xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
+
+# # Obtain labels for each point in mesh. Use last trained model.
+# Z = kmeans.predict(np.c_[xx.ravel(), yy.ravel()])
+
+# # Put the result into a color plot
+# Z = Z.reshape(xx.shape)
+# plt.figure(1)
+# plt.clf()
+# plt.imshow(Z, interpolation='nearest',
+#            extent=(xx.min(), xx.max(), yy.min(), yy.max()),
+#            cmap=plt.cm.Paired,
+#            aspect='auto', origin='lower')
+
+# plt.plot(reduced_data[:, 0], reduced_data[:, 1], 'k.', markersize=2)
+# # Plot the centroids as a white X
+# centroids = kmeans.cluster_centers_
+# plt.scatter(centroids[:, 0], centroids[:, 1],
+#             marker='x', s=169, linewidths=3,
+#             color='w', zorder=10)
+# plt.title('K-means clustering on the digits dataset (PCA-reduced data)\n'
+#           'Centroids are marked with white cross')
+# plt.xlim(x_min, x_max)
+# plt.ylim(y_min, y_max)
+# plt.xticks(())
+# plt.yticks(())
+# plt.show()
 
 
 
