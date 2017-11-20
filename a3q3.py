@@ -6,9 +6,12 @@ import matplotlib.pyplot as plt
 
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
+from sklearn.neural_network import MLPClassifier
 from sklearn.datasets import fetch_lfw_people
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import KFold
 from sklearn.decomposition import PCA
 from sklearn.svm import SVC
 import ssl
@@ -46,9 +49,9 @@ print("n_features: %d" % n_features)
 print("n_classes: %d" % n_classes)
 # split into a training and testing set
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.25, random_state=42)
+    X, y, test_size=0.1, random_state=42)
 
-n_components = 150
+n_components = 900
 
 print("Extracting the top %d eigenfaces from %d faces"
       % (n_components, X_train.shape[0]))
@@ -84,99 +87,87 @@ print(classification_report(y_test, y_pred, target_names=target_names))
 print(confusion_matrix(y_test, y_pred, labels=range(n_classes)))
 
 
-# def plot_gallery(images, titles, h, w, n_row=3, n_col=4):
-#     """Helper function to plot a gallery of portraits"""
-#     plt.figure(figsize=(1.8 * n_col, 2.4 * n_row))
-#     plt.subplots_adjust(bottom=0, left=.01, right=.99, top=.90, hspace=.35)
-#     for i in range(n_row * n_col):
-#         plt.subplot(n_row, n_col, i + 1)
-#         plt.imshow(images[i].reshape((h, w)), cmap=plt.cm.gray)
-#         plt.title(titles[i], size=12)
-#         plt.xticks(())
-#         plt.yticks(())
-
-
-# # plot the result of the prediction on a portion of the test set
-
-# def title(y_pred, y_test, target_names, i):
-#     pred_name = target_names[y_pred[i]].rsplit(' ', 1)[-1]
-#     true_name = target_names[y_test[i]].rsplit(' ', 1)[-1]
-#     return 'predicted: %s\ntrue:      %s' % (pred_name, true_name)
-
-# prediction_titles = [title(y_pred, y_test, target_names, i)
-#                      for i in range(y_pred.shape[0])]
-
-# plot_gallery(X_test, prediction_titles, h, w)
-
-# # plot the gallery of the most significative eigenfaces
-
-# eigenface_titles = ["eigenface %d" % i for i in range(eigenfaces.shape[0])]
-# plot_gallery(eigenfaces, eigenface_titles, h, w)
-
-# plt.show()
-
-#feed forward nn from class
-
-
-
 inputsORth=X_train_pca
 inputsOrig=X_train
 trainYs=y_train
 testsOrig=X_test
 testsORth=X_test_pca
-testYs=y_train
-sizeX=1850 #784  150 for orthogonal
-sizeY=7 #10
+testYs=y_test
 
 
 
-
-
-
-#with orthoganal
-#trX, trY, teX, teY = inputsORth, trainYs, testsORth, testYs
+#with original values
 trX, trY, teX, teY = inputsOrig, trainYs, testsOrig, testYs
-def init_weights(shape):
-    return tf.Variable(tf.random_normal(shape, stddev=0.01))
+setOfX=[]
+setOfY=[]
+
+setOfX=trX
+setOfY=trY
+
+kf = KFold(n_splits=4, shuffle=True);
+print("Results of NN using original data as input: ")
+index=0
+for train_index, test_index in kf.split(setOfX):
+    X_train, X_test = setOfX[train_index], setOfX[test_index]
+    y_train, y_test = setOfY[train_index], setOfY[test_index]
+    print("Done training for Itteration")
+    index=index+1
+    print(index)
+    
+    mlp = MLPClassifier(hidden_layer_sizes=(7,7,7),max_iter=500)
+    mlp.fit(X_train,y_train)
 
 
-def model(X, w_h1, w_o):
-    h = tf.nn.sigmoid(tf.matmul(X, w_h1)) # this is a basic mlp
-    return tf.matmul(h, w_o) # note that we dont take the softmax at the end because our cost fn does that for us
+    predictions = mlp.predict(X_test)
 
-#mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
-#trX, trY, teX, teY = mnist.train.images, mnist.train.labels, mnist.test.images, mnist.test.labels
+    print(classification_report(y_test,predictions))
 
-size_h1 = tf.constant(625, dtype=tf.int32)
+print("Results not using k means ")
+mlp = MLPClassifier(hidden_layer_sizes=(7,7,7),max_iter=500)
+mlp.fit(trX,trY)
 
-X = tf.placeholder("float", [None, sizeX])
-Y = tf.placeholder("float", [None, 7])
+predictions = mlp.predict(teX)
 
-w_h1 = init_weights([sizeX, size_h1]) # create symbolic variables
-w_o = init_weights([size_h1, 7])
-
-py_x = model(X, w_h1, w_o)
-
-#resize 
-# temp = trY.shape
-# trY = trY.reshape(temp[0], 1)
-# trY = np.concatenate((1-trY, trY), axis=1)
-# temp = teY.shape
-# teY = teY.reshape(temp[0], 1)
-# teY = np.concatenate((1-teY, teY), axis=1)
+print(classification_report(teY,predictions))
 
 
-cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=py_x, labels=Y)) # compute costs
-train_op = tf.train.GradientDescentOptimizer(0.05).minimize(cost) # construct an optimizer
-predict_op = tf.argmax(py_x, 1)
-#trX=np.reshape(this_x,(1, 64))
-# Launch the graph in a session
-with tf.Session() as sess:
-    # you need to initialize all variables
-    tf.global_variables_initializer().run()
-    print(range(0,len(trX),128))
-    for i in range(45):
-        for start, end in zip(range(0, len(trX), 128), range(128, len(trX)+1, 128)):
-            sess.run(train_op, feed_dict={X: trX[start:end], Y: trY[start:end]})
-        print(i, np.mean(np.argmax(teY, axis=1) ==
-                         sess.run(predict_op, feed_dict={X: teX})))
+
+#with orthogonal values
+print("Results of NN using orthogonal basis as input: ")
+trX, trY, teX, teY = inputsORth, trainYs, testsORth, testYs
+setOfX=[]
+setOfY=[]
+setOfX=trX
+setOfY=trY
+
+kf = KFold(n_splits=4, shuffle=True);
+index=0
+for train_index, test_index in kf.split(setOfX):
+    X_train, X_test = setOfX[train_index], setOfX[test_index]
+    y_train, y_test = setOfY[train_index], setOfY[test_index]
+    print("Done training for Itteration")
+    index=index+1
+    print(index)
+    
+    mlp = MLPClassifier(hidden_layer_sizes=(7,7,7),max_iter=500)
+    mlp.fit(X_train,y_train)
+
+    predictions = mlp.predict(X_test)
+
+    print(classification_report(y_test,predictions))
+
+
+
+print("Results not using k means ")
+
+mlp = MLPClassifier(hidden_layer_sizes=(7,7,7),max_iter=500)
+mlp.fit(trX,trY)
+
+predictions = mlp.predict(teX)
+
+print(classification_report(teY,predictions))
+
+
+
+
+
