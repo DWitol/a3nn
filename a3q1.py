@@ -35,21 +35,21 @@ Y=mnist.target
 # set up a subset with only values for 1 and 5 of size 60 ( 30 of each value) for training
 
 index=7000 # start of images of ones
-for j in range(index,index+2):
+for j in range(index,index+3):
     subSetX.append(X[j])
     subSetY.append(Y[j])
 index=35000 #start of images of 5s
-for j in range(index,index+2):
+for j in range(index,index+3):
     subSetX.append(X[j])
     subSetY.append(Y[j])
 # set up a subset with only values for 1 and 5 of size 10 ( 5 of each value) for testing
 
 index=7100
-for j in range(index,index+3):
+for j in range(index,index+5):
     subSetXTest.append(X[j])
     subSetYTest.append(Y[j])
 index=(7000*5)+100
-for j in range(index,index+3):
+for j in range(index,index+5):
     subSetXTest.append(X[j])
     subSetYTest.append(Y[j])
 
@@ -57,6 +57,11 @@ x_train =subSetX
 y_train = subSetY
 x_test =subSetXTest
 y_test = subSetYTest
+random.shuffle(x_train)
+random.shuffle(y_train)
+random.shuffle(x_test)
+random.shuffle(y_train)
+
 print(len(x_train))
 print(len(y_train))
 print(len(x_test))
@@ -70,7 +75,6 @@ for i in range(0,len(x_train)):
         if x_train[i][j] == 0: arr.append(-1)
         else: arr.append(1)
     x_train[i] = arr
-    print(i," of ", len(x_train))
 
 for i in range(0,len(x_test)):
     arr = []
@@ -78,7 +82,6 @@ for i in range(0,len(x_test)):
         if x_test[i][j] == 0: arr.append(-1)
         else: arr.append(1)
     x_test[i] = arr
-    print(i," of ", len(x_test))
 
 # def to_pattern(letter):
 #     from numpy import array
