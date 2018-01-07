@@ -45,11 +45,11 @@ for j in range(index,index+3):
 # set up a subset with only values for 1 and 5 of size 10 ( 5 of each value) for testing
 
 index=7100
-for j in range(index,index+5):
+for j in range(index,index+100):
     subSetXTest.append(X[j])
     subSetYTest.append(Y[j])
 index=(7000*5)+100
-for j in range(index,index+5):
+for j in range(index,index+100):
     subSetXTest.append(X[j])
     subSetYTest.append(Y[j])
 
@@ -185,13 +185,30 @@ states = []
 
 hopfieldNetwork.setNodes(x_train[1])
 hopfieldNetwork.stimulateNetwork()
-state1 = hopfieldNetwork.getState()
+#state1 = hopfieldNetwork.getState()
 #display(np.matrix(X[35000]))
 #display(np.matrix(state1))
-
+sum = 0
+bool = True
 for i in range(0,len(x_test)):
-    display(np.matrix(x_test[i]))
-    display(recall(W,x_test[i]));
+    x = np.matrix(x_test[i])
+    y = recall(W,x_test[i])
+    correct = 0
+    count = 0
+    c = np.equal(x,y)
+    # for j in x:
+    #     if x == y[count]:
+    #        correct += 1
+    #     count += 1
+    for j in c.flat:
+        if True == j:
+            correct += 1
+
+    sum = sum + (correct/len(x.flat))
+
+sum = sum/len(x_test)
+print("accuracy for this network is ", sum)
+
 
 
 # for i in range(0,len(X)-1):
